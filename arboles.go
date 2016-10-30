@@ -8,6 +8,55 @@ import (
 )
 
 const CARACTERES = "0123456789+-*/%"
+const TOKEN = ":=" 
+
+/**
+ * Estructura de una cola de expresiones
+ */
+type Expresiones struct {
+    nodes []*string
+    size  int
+    head  int
+    tail  int
+    count int
+}
+
+/**
+ * Funcion que agrega expresiones a la cola
+ */
+func (q *Expresiones) agregarExpresion(n *string) {
+    if q.head == q.tail && q.count > 0 {
+        nodes := make([]*string, len(q.nodes)+q.size)
+        copy(nodes, q.nodes[q.head:])
+        copy(nodes[len(q.nodes)-q.head:], q.nodes[:q.head])
+        q.head = 0
+        q.tail = len(q.nodes)
+        q.nodes = nodes
+    }
+    q.nodes[q.tail] = n
+    q.tail = (q.tail + 1) % len(q.nodes)
+    q.count++
+}
+
+/**
+ * Funcion que remueve expresiones de la pila
+ */
+func (q *Expresiones) removerExpresion() *string {
+    if q.count == 0 {
+        return nil
+    }
+    node := q.nodes[q.head]
+    q.head = (q.head + 1) % len(q.nodes)
+    q.count--
+    return node
+}
+
+func crearColaExpresiones(size int) *Expresiones {
+    return &Expresiones{
+        nodes: make([]*string, size),
+        size:  size,
+    }
+}
 
 /**
  * Estructura de una pila de arboles
@@ -127,7 +176,7 @@ func esArbolValido(t *Arbol) bool {
 func construirArbol(expresion string) *Arbol {
 	pila := &Pila{}
 	for _, char := range expresion {
-		fmt.Println(string(char), pila.cantidad)
+		fmt.Println(string(char), pila.cantidad)//test
 		if strings.Contains(CARACTERES[:10], string(char)) {
 			pila.agregarAPila(&Arbol{nil, nil, string(char)})
 		} else if strings.Contains(CARACTERES[10:], string(char)) {
@@ -145,12 +194,51 @@ func construirArbol(expresion string) *Arbol {
 	return pila.removerDePila()
 }
 
+/**
+ * Construye una expresion a partir de una pila de subexpresiones que incluyen variables
+ */
+func construirExpresion(expresiones *Expresiones) string{
+	var exprFinal string
+	for {
+		expr1 := *expresiones.removerExpresion()
+		if !strings.HasSuffix(expr1, TOKEN) {
+			exprFinal = expr1
+			break
+		}
+		expresiones.agregarExpresion(&expr1)
+	}
+	fmt.Println(exprFinal)//test
+	for expresiones.count > 0 {
+		expr := *expresiones.removerExpresion()
+		if strings.HasSuffix(expr, TOKEN) {
+			varName := string(expr[len(expr)-3])
+			if strings.Contains(exprFinal, varName) {
+				exprFinal = strings.Replace(exprFinal, varName, string(expr[:len(expr)-3]), 1)
+			}
+		} else {
+			expresiones.agregarExpresion(&expr)
+		}
+		fmt.Println(exprFinal)//test
+	}
+	
+	return exprFinal
+}
+
 func main() {
   //t1 := &Arbol{&Arbol{&Arbol{&Arbol{nil, nil, "2"}, &Arbol{nil, nil, "3"}, "*"}, &Arbol{&Arbol{nil, nil, "9"}, &Arbol{nil, nil, "3"}, "/"}, "+"}, &Arbol{&Arbol{nil, nil, "6"}, &Arbol{nil, nil, "1"}, "-"}, "+"}
   //(2*3)+(9/3)%(5*1)
-  var expr string
-  fmt.Scanln(&expr)
-  t1 := construirArbol(expr)
+  expresiones := crearColaExpresiones(100)
+  var continuar string = "S" 
+  for continuar == "S" {
+	  var expr string
+	  fmt.Print("Ingrese una expresion: ")
+	  fmt.Scanln(&expr)
+	  expresiones.agregarExpresion(&expr)
+	  fmt.Print("Desea ingresar otra expresion? (S/N): ")
+	  fmt.Scanln(&continuar)
+  }
+  var expFinal string = construirExpresion(expresiones)
+  t1 := construirArbol(expFinal)
   if t1!=nil {
 	  RecorrerPreorden(t1)
 	  fmt.Println()
