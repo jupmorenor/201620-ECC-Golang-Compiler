@@ -5,10 +5,12 @@ import (
   "fmt"
   "strconv"
   "strings"
+  "bufio"
+  "os"
 )
 
-const CARACTERES = "0123456789+-*/%"
-const TOKEN = ":=" 
+const CARACTERES string = " 0123456789+-*/%"
+const TOKEN string = ":=" 
 
 /**
  * Estructura de una cola de expresiones
@@ -175,8 +177,8 @@ func esArbolValido(t *Arbol) bool {
  */ 
 func construirArbol(expresion string) *Arbol {
 	pila := &Pila{}
-	for _, char := range expresion {
-		fmt.Println(string(char), pila.cantidad)//test
+	elementos := strings.Split(expresion, " ")
+	for _, char := range elementos {
 		if strings.Contains(CARACTERES[:10], string(char)) {
 			pila.agregarAPila(&Arbol{nil, nil, string(char)})
 		} else if strings.Contains(CARACTERES[10:], string(char)) {
@@ -207,21 +209,34 @@ func construirExpresion(expresiones *Expresiones) string{
 		}
 		expresiones.agregarExpresion(&expr1)
 	}
-	fmt.Println(exprFinal)//test
 	for expresiones.count > 0 {
 		expr := *expresiones.removerExpresion()
 		if strings.HasSuffix(expr, TOKEN) {
-			varName := string(expr[len(expr)-3])
+			varName := string(expr[len(expr)-4])
 			if strings.Contains(exprFinal, varName) {
-				exprFinal = strings.Replace(exprFinal, varName, string(expr[:len(expr)-3]), 1)
+				exprFinal = strings.Replace(exprFinal, varName, string(expr[:len(expr)-5]), -1)
+				expresiones.agregarExpresion(&expr)
+			} else {
+				expresiones.agregarExpresion(&expr)
 			}
 		} else {
 			expresiones.agregarExpresion(&expr)
 		}
-		fmt.Println(exprFinal)//test
+		if esExpresionFinal(exprFinal) {
+			break
+		}
 	}
 	
 	return exprFinal
+}
+
+func esExpresionFinal(expr string) bool {
+	for _, char := range expr {
+		if !strings.Contains(CARACTERES, string(char)) {
+			return false
+		}
+	}
+	return true
 }
 
 func main() {
@@ -229,10 +244,12 @@ func main() {
   //(2*3)+(9/3)%(5*1)
   expresiones := crearColaExpresiones(100)
   var continuar string = "S" 
+  reader := bufio.NewReader(os.Stdin)
   for continuar == "S" {
 	  var expr string
 	  fmt.Print("Ingrese una expresion: ")
-	  fmt.Scanln(&expr)
+	  expr, _ = reader.ReadString('\n')
+	  expr = strings.TrimSuffix(expr, "\r\n")
 	  expresiones.agregarExpresion(&expr)
 	  fmt.Print("Desea ingresar otra expresion? (S/N): ")
 	  fmt.Scanln(&continuar)
@@ -240,10 +257,10 @@ func main() {
   var expFinal string = construirExpresion(expresiones)
   t1 := construirArbol(expFinal)
   if t1!=nil {
-	  RecorrerPreorden(t1)
-	  fmt.Println()
-	  RecorrerPostorden(t1)
-	  fmt.Println()
+	  //RecorrerPreorden(t1)
+	  //fmt.Println()
+	  //RecorrerPostorden(t1)
+	  //fmt.Println()
 	  if esArbolValido(t1) {
 		RecorrerInorden(t1)
 		fmt.Print(" =  ")
