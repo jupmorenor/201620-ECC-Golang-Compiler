@@ -1,9 +1,13 @@
+//Juan Pablo Moreno Rico - 20111020059
 package main
 
 import (
   "fmt"
   "strconv"
+  "strings"
 )
+
+const CARACTERES_VALIDOS = "0123456789+-*/%"
 
 /**
  * Estructura de un arbol 
@@ -34,8 +38,8 @@ func RecorrerPreorden(t *Arbol) {
     return
   }
   fmt.Print(t.Valor, " ")
-  RecorrerInorden(t.Izquierda)
-  RecorrerInorden(t.Derecha)
+  RecorrerPreorden(t.Izquierda)
+  RecorrerPreorden(t.Derecha)
 }
 
 /**
@@ -45,8 +49,8 @@ func RecorrerPostorden(t *Arbol) {
   if t == nil {
     return
   }
-  RecorrerInorden(t.Izquierda)
-  RecorrerInorden(t.Derecha)
+  RecorrerPostorden(t.Izquierda)
+  RecorrerPostorden(t.Derecha)
   fmt.Print(t.Valor, " ")
 }
 
@@ -74,10 +78,32 @@ func OperarArbol(t *Arbol) int{
   }
 }
 
+/**
+ * validacion del arbol
+ */
+func EsArbolValido(t *Arbol) bool { 
+	if t == nil {
+		return true
+	} else {
+		for i := range t.Valor { 
+			//fmt.Println(t.Valor[i], string(t.Valor[i]))
+			if !strings.Contains(CARACTERES_VALIDOS, string(t.Valor[i])) {
+				return false
+			}
+		}
+		return EsArbolValido(t.Izquierda) && EsArbolValido(t.Derecha)
+	}
+}
+
 func main() {
-  t1 := &Arbol{&Arbol{&Arbol{&Arbol{nil, nil, "2"}, &Arbol{nil, nil, "3"}, "*"}, &Arbol{&Arbol{nil, nil, "9"}, &Arbol{nil, nil, "3"}, "/"}, "+"}, &Arbol{&Arbol{nil, nil, "6"}, &Arbol{nil, nil, "1"}, "-"}, "%"}
-  //(2*3)+(9/3)%(5*1)
-  RecorrerInorden(t1)
-  fmt.Print(" =  ")
-  fmt.Println(OperarArbol(t1), " <- Resultado de evaluar el arbol")
+  t1 := &Arbol{&Arbol{&Arbol{&Arbol{nil, nil, "120"}, &Arbol{nil, nil, "70"}, "+"}, &Arbol{&Arbol{nil, nil, "150"}, &Arbol{nil, nil, "30"}, "-"}, "*"}, &Arbol{&Arbol{nil, nil, "140"}, &Arbol{nil, nil, "50"}, "%"}, "/"}
+  //(120+70)*(150-30)/(140%50) = 570 
+  if EsArbolValido(t1) {
+	  fmt.Println("El arbol es valido")
+	  RecorrerInorden(t1)
+	  fmt.Print(" =  ")
+	  fmt.Println(OperarArbol(t1), " <- Resultado de evaluar el arbol")
+  } else {
+	  fmt.Println("El arbol ingresado NO es valido")
+  }
 }
