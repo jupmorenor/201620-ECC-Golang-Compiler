@@ -7,10 +7,37 @@ import (
   "strings"
 )
 
-const CARACTERES_VALIDOS = "0123456789+-*/%"
+const CARACTERES = "0123456789+-*/%"
 
 /**
- * Estructura de un arbol 
+ * Estructura de una pila de arboles
+ */
+type Pila struct {
+	datos [] *Arbol
+	cantidad int
+}
+
+/**
+ * Funcion que agrega arboles a la pila
+ */
+func (pil *Pila) agregarAPila(arbol *Arbol) {
+	pil.datos = append(pil.datos[:pil.cantidad], arbol)
+	pil.cantidad++
+}
+
+/**
+ * Funcion que remueve arboles de la pila
+ */
+func (pil *Pila) removerDePila() *Arbol {
+	if pil.cantidad == 0 {
+		return nil
+	}
+	pil.cantidad--
+	return pil.datos[pil.cantidad]
+}
+
+/**
+ * Estructura de un arbol
  */
 type Arbol struct {
   Izquierda *Arbol
@@ -73,37 +100,70 @@ func OperarArbol(t *Arbol) int{
 	case "%":
 		return OperarArbol(t.Izquierda) % OperarArbol(t.Derecha)
 	default:
-		var val, _ = strconv.Atoi(t.Valor)
-		return val
+    var val, _ = strconv.Atoi(t.Valor)
+    return val
   }
 }
 
 /**
- * validacion del arbol
+ * Validacion de la correctitud del arbol
  */
-func EsArbolValido(t *Arbol) bool { 
-	if t == nil {
-		return true
-	} else {
-		for i := range t.Valor { 
-			//fmt.Println(t.Valor[i], string(t.Valor[i]))
-			if !strings.Contains(CARACTERES_VALIDOS, string(t.Valor[i])) {
-				return false
+func esArbolValido(t *Arbol) bool {
+  if t == nil {
+    return true
+  } else {
+    for _, char := range t.Valor {
+      if !strings.Contains(CARACTERES, string(char)) {
+        return false
+      }
+    }
+    return esArbolValido(t.Izquierda) && esArbolValido(t.Derecha)
+  }
+}
+
+/**
+ * Construye un arbol a partir de una expresion postfija
+ */ 
+func construirArbol(expresion string) *Arbol {
+	pila := &Pila{}
+	for _, char := range expresion {
+		fmt.Println(string(char), pila.cantidad)
+		if strings.Contains(CARACTERES[:10], string(char)) {
+			pila.agregarAPila(&Arbol{nil, nil, string(char)})
+		} else if strings.Contains(CARACTERES[10:], string(char)) {
+			if pila.cantidad >= 2 {
+				t1 := pila.removerDePila()
+				t2 := pila.removerDePila()
+				pila.agregarAPila(&Arbol{t2, t1, string(char)})
+			} else {
+				return nil
 			}
+		} else {
+			return nil
 		}
-		return EsArbolValido(t.Izquierda) && EsArbolValido(t.Derecha)
 	}
+	return pila.removerDePila()
 }
 
 func main() {
-  t1 := &Arbol{&Arbol{&Arbol{&Arbol{nil, nil, "120"}, &Arbol{nil, nil, "70"}, "+"}, &Arbol{&Arbol{nil, nil, "150"}, &Arbol{nil, nil, "30"}, "-"}, "*"}, &Arbol{&Arbol{nil, nil, "140"}, &Arbol{nil, nil, "50"}, "%"}, "/"}
-  //(120+70)*(150-30)/(140%50) = 570 
-  if EsArbolValido(t1) {
-	  fmt.Println("El arbol es valido")
-	  RecorrerInorden(t1)
-	  fmt.Print(" =  ")
-	  fmt.Println(OperarArbol(t1), " <- Resultado de evaluar el arbol")
+  //t1 := &Arbol{&Arbol{&Arbol{&Arbol{nil, nil, "2"}, &Arbol{nil, nil, "3"}, "*"}, &Arbol{&Arbol{nil, nil, "9"}, &Arbol{nil, nil, "3"}, "/"}, "+"}, &Arbol{&Arbol{nil, nil, "6"}, &Arbol{nil, nil, "1"}, "-"}, "+"}
+  //(2*3)+(9/3)%(5*1)
+  var expr string
+  fmt.Scanln(&expr)
+  t1 := construirArbol(expr)
+  if t1!=nil {
+	  RecorrerPreorden(t1)
+	  fmt.Println()
+	  RecorrerPostorden(t1)
+	  fmt.Println()
+	  if esArbolValido(t1) {
+		RecorrerInorden(t1)
+		fmt.Print(" =  ")
+		fmt.Println(OperarArbol(t1), " <- Resultado de evaluar el arbol")
+	  } else {
+		fmt.Println("Arbol invalido")
+	  }
   } else {
-	  fmt.Println("El arbol ingresado NO es valido")
+	  fmt.Println("Expresion incorrecta")
   }
 }
