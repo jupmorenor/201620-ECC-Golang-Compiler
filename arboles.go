@@ -10,7 +10,49 @@ import (
 )
 
 const CARACTERES string = " 0123456789+-*/%"
-const TOKEN string = ":=" 
+const ASIGNADOR string = ":=" 
+
+/**
+ * Estructura de una pila de tokens 
+ */
+type pilaTokens struct {
+	contenido [] *Token
+	cantidad int
+}
+
+/**
+ * Estructura de un token
+ */
+type Token struct {
+	tipo string
+	simbolo string
+}
+
+/**
+ * Funcion que agrega tokens a la pila
+ */
+func (pil *pilaTokens) agregarAPila(token *Token) {
+	pil.contenido = append(pil.contenido[:pil.cantidad], token)
+	pil.cantidad++
+}
+
+/**
+ * Funcion que remueve tokens de la pila
+ */
+func (pil *pilaTokens) removerDePila() *Token {
+	if pil.cantidad == 0 {
+		return nil
+	}
+	pil.cantidad--
+	return pil.contenido[pil.cantidad]
+}
+
+/**
+ * Imprime un token
+ */
+func (t *Token) String() string {
+	return fmt.Sprint(t.tipo, " -> ", t.simbolo)
+}
 
 /**
  * Estructura de una cola de expresiones
@@ -203,7 +245,7 @@ func construirExpresion(expresiones *Expresiones) string{
 	var exprFinal string
 	for {
 		expr1 := *expresiones.removerExpresion()
-		if !strings.HasSuffix(expr1, TOKEN) {
+		if !strings.HasSuffix(expr1, ASIGNADOR) {
 			exprFinal = expr1
 			break
 		}
@@ -211,7 +253,7 @@ func construirExpresion(expresiones *Expresiones) string{
 	}
 	for expresiones.count > 0 {
 		expr := *expresiones.removerExpresion()
-		if strings.HasSuffix(expr, TOKEN) {
+		if strings.HasSuffix(expr, ASIGNADOR) {
 			varName := string(expr[len(expr)-4])
 			if strings.Contains(exprFinal, varName) {
 				exprFinal = strings.Replace(exprFinal, varName, string(expr[:len(expr)-5]), -1)
@@ -239,18 +281,36 @@ func esExpresionFinal(expr string) bool {
 	return true
 }
 
+func generarTablaSim(pila *pilaTokens, expr string) {
+	expresion := strings.Split(expr, " ")
+	for _, char := range expresion {
+		switch {
+			case strings.Contains(CARACTERES[:11], string(char)):
+				pila.agregarAPila(&Token{"VAL", string(char)})
+			case strings.Contains(CARACTERES[11:], string(char)):
+				pila.agregarAPila(&Token{"OP", string(char)})
+			case strings.Contains(ASIGNADOR, string(char)):
+				pila.agregarAPila(&Token{"OP", string(char)})
+			default:
+				pila.agregarAPila(&Token{"ID", string(char)})
+		}
+	}
+}
+
 func main() {
   //t1 := &Arbol{&Arbol{&Arbol{&Arbol{nil, nil, "2"}, &Arbol{nil, nil, "3"}, "*"}, &Arbol{&Arbol{nil, nil, "9"}, &Arbol{nil, nil, "3"}, "/"}, "+"}, &Arbol{&Arbol{nil, nil, "6"}, &Arbol{nil, nil, "1"}, "-"}, "+"}
   //(2*3)+(9/3)%(5*1)
   expresiones := crearColaExpresiones(100)
+  tablaSimbolos := &pilaTokens{}
   var continuar string = "S" 
   reader := bufio.NewReader(os.Stdin)
   for continuar == "S" {
 	  var expr string
 	  fmt.Print("Ingrese una expresion: ")
 	  expr, _ = reader.ReadString('\n')
-	  expr = strings.TrimSuffix(expr, "\r\n") // \r\n -> win; \n -> otros
+	  expr = strings.TrimSuffix(expr, "\n") // \r\n -> win; \n -> otros
 	  expresiones.agregarExpresion(&expr)
+	  generarTablaSim(tablaSimbolos, expr)
 	  fmt.Print("Desea ingresar otra expresion? (S/N): ")
 	  fmt.Scanln(&continuar)
   }
@@ -270,5 +330,8 @@ func main() {
 	  }
   } else {
 	  fmt.Println("Expresion incorrecta")
+  }
+  for i := 0; i < tablaSimbolos.cantidad; i++ {
+	  fmt.Println(tablaSimbolos.contenido[i])
   }
 }
