@@ -179,9 +179,9 @@ func construirArbol(expresion string) *Arbol {
 	pila := &Pila{}
 	elementos := strings.Split(expresion, " ")
 	for _, char := range elementos {
-		if strings.Contains(CARACTERES[:10], string(char)) {
+		if strings.Contains(CARACTERES[:11], string(char)) {
 			pila.agregarAPila(&Arbol{nil, nil, string(char)})
-		} else if strings.Contains(CARACTERES[10:], string(char)) {
+		} else if strings.Contains(CARACTERES[11:], string(char)) {
 			if pila.cantidad >= 2 {
 				t1 := pila.removerDePila()
 				t2 := pila.removerDePila()
@@ -249,7 +249,7 @@ func main() {
 	  var expr string
 	  fmt.Print("Ingrese una expresion: ")
 	  expr, _ = reader.ReadString('\n')
-	  expr = strings.TrimSuffix(expr, "\r\n")
+	  expr = strings.TrimSuffix(expr, "\r\n") // \r\n -> win; \n -> otros
 	  expresiones.agregarExpresion(&expr)
 	  fmt.Print("Desea ingresar otra expresion? (S/N): ")
 	  fmt.Scanln(&continuar)
