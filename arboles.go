@@ -221,7 +221,7 @@ func construirArbol(expresion string) *Arbol {
 	pila := &Pila{}
 	elementos := strings.Split(expresion, " ")
 	for _, char := range elementos {
-		if strings.Contains(CARACTERES[:11], string(char)) {
+		if strings.ContainsAny(CARACTERES[:11], string(char)) {
 			pila.agregarAPila(&Arbol{nil, nil, string(char)})
 		} else if strings.Contains(CARACTERES[11:], string(char)) {
 			if pila.cantidad >= 2 {
@@ -285,7 +285,7 @@ func generarTablaSim(pila *pilaTokens, expr string) {
 	expresion := strings.Split(expr, " ")
 	for _, char := range expresion {
 		switch {
-			case strings.Contains(CARACTERES[:11], string(char)):
+			case strings.ContainsAny(CARACTERES[:11], string(char)):
 				pila.agregarAPila(&Token{"VAL", string(char)})
 			case strings.Contains(CARACTERES[11:], string(char)):
 				pila.agregarAPila(&Token{"OP", string(char)})
@@ -308,7 +308,7 @@ func main() {
 	  var expr string
 	  fmt.Print("Ingrese una expresion: ")
 	  expr, _ = reader.ReadString('\n')
-	  expr = strings.TrimSuffix(expr, "\n") // \r\n -> win; \n -> otros
+	  expr = strings.TrimSuffix(expr, "\r\n") // \r\n -> win; \n -> otros
 	  expresiones.agregarExpresion(&expr)
 	  generarTablaSim(tablaSimbolos, expr)
 	  fmt.Print("Desea ingresar otra expresion? (S/N): ")
