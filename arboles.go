@@ -7,6 +7,7 @@ import (
   "strings"
   "bufio"
   "os"
+  "regexp"
 )
 
 const CARACTERES string = " 0123456789+-*/%"
@@ -300,6 +301,9 @@ func generarTablaSim(pila *pilaTokens, expr string) {
 func main() {
   //t1 := &Arbol{&Arbol{&Arbol{&Arbol{nil, nil, "2"}, &Arbol{nil, nil, "3"}, "*"}, &Arbol{&Arbol{nil, nil, "9"}, &Arbol{nil, nil, "3"}, "/"}, "+"}, &Arbol{&Arbol{nil, nil, "6"}, &Arbol{nil, nil, "1"}, "-"}, "+"}
   //(2*3)+(9/3)%(5*1)
+  rIDs, _ := regexp.Compile("^[a-zA-Z]+[a-zA-Z0-9]*")
+  rVal, _ := regexp.Compile("[0-9]+")
+  rOps, _ := regexp.Compile("^(+)^(*)^(/)^(-)^(%)^(:=)")
   expresiones := crearColaExpresiones(100)
   tablaSimbolos := &pilaTokens{}
   var continuar string = "S" 
@@ -308,7 +312,7 @@ func main() {
 	  var expr string
 	  fmt.Print("Ingrese una expresion: ")
 	  expr, _ = reader.ReadString('\n')
-	  expr = strings.TrimSuffix(expr, "\r\n") // \r\n -> win; \n -> otros
+	  expr = strings.TrimSuffix(expr, "\n") // \r\n -> win; \n -> otros
 	  expresiones.agregarExpresion(&expr)
 	  generarTablaSim(tablaSimbolos, expr)
 	  fmt.Print("Desea ingresar otra expresion? (S/N): ")
