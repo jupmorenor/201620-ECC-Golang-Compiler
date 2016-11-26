@@ -302,21 +302,45 @@ func main() {
   //t1 := &Arbol{&Arbol{&Arbol{&Arbol{nil, nil, "2"}, &Arbol{nil, nil, "3"}, "*"}, &Arbol{&Arbol{nil, nil, "9"}, &Arbol{nil, nil, "3"}, "/"}, "+"}, &Arbol{&Arbol{nil, nil, "6"}, &Arbol{nil, nil, "1"}, "-"}, "+"}
   //(2*3)+(9/3)%(5*1)
   rIDs, _ := regexp.Compile("^[a-zA-Z]+[a-zA-Z0-9]*")
-  rVal, _ := regexp.Compile("[0-9]+")
-  rOps, _ := regexp.Compile("^(+)^(*)^(/)^(-)^(%)^(:=)")
+  rVal, _ := regexp.Compile("^[0-9]+$")
+  rOps, _ := regexp.Compile("^[\\+|\\-|\\*|\\/|\\%]|:=$")
   expresiones := crearColaExpresiones(100)
   tablaSimbolos := &pilaTokens{}
+  pilaAux := &pilaTokens{}
+  var token *Token
   var continuar string = "S" 
   reader := bufio.NewReader(os.Stdin)
   for continuar == "S" {
 	  var expr string
 	  fmt.Print("Ingrese una expresion: ")
 	  expr, _ = reader.ReadString('\n')
-	  expr = strings.TrimSuffix(expr, "\n") // \r\n -> win; \n -> otros
+	  expr = strings.TrimSpace(expr) // \r\n -> win; \n -> otros
 	  expresiones.agregarExpresion(&expr)
 	  generarTablaSim(tablaSimbolos, expr)
 	  fmt.Print("Desea ingresar otra expresion? (S/N): ")
 	  fmt.Scanln(&continuar)
+  }
+  for tablaSimbolos.cantidad > 0 {
+	  token = tablaSimbolos.removerDePila()
+	  fmt.Println(token.tipo, token.simbolo)
+	  switch token.tipo {
+		case "VAL":
+			if !rVal.MatchString(token.simbolo) {
+				fmt.Println(token.tipo, token.simbolo, "no valido")
+			}
+		case "OP":
+			if !rOps.MatchString(token.simbolo) {
+				fmt.Println(token.tipo, token.simbolo, "no valido")
+			}
+		case "ID":
+			if !rIDs.MatchString(token.simbolo) {
+				fmt.Println(token.tipo, token.simbolo, "no valido")
+			}
+	  }
+	  pilaAux.agregarAPila(token)
+  }
+  for pilaAux.cantidad > 0 {
+	  tablaSimbolos.agregarAPila(pilaAux.removerDePila())
   }
   var expFinal string = construirExpresion(expresiones)
   t1 := construirArbol(expFinal)
@@ -334,8 +358,5 @@ func main() {
 	  }
   } else {
 	  fmt.Println("Expresion incorrecta")
-  }
-  for i := 0; i < tablaSimbolos.cantidad; i++ {
-	  fmt.Println(tablaSimbolos.contenido[i])
   }
 }
